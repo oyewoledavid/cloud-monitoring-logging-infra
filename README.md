@@ -1,4 +1,4 @@
-# Cloud Monitoring and Logging Infrastructure
+# 🌐 Cloud Monitoring Logging Infra
 
 This project sets up a real-world cloud monitoring and logging infrastructure on AWS using **Terraform**, **Ansible**, **Prometheus**, **Grafana**, **Loki**, and **Fluent Bit**.
 
@@ -19,37 +19,47 @@ This infrastructure enables:
 
 ## 🚀 Tech Stack
 
-| Layer        | Tool                     |
-| ------------ | ------------------------ |
-| IaC          | Terraform                |
-| Configuration | Ansible                 |
-| Monitoring   | Prometheus, Grafana      |
-| Logging      | Fluent Bit, Loki         |
-| Alerts       | Alertmanager + Slack     |
-| Cloud        | AWS (EC2, Security Groups, VPC, etc.) |
+This project sets up a centralized cloud-based monitoring and logging infrastructure using:
+
+- **Terraform** for provisioning AWS EC2 instances
+- **Ansible** for automated configuration
+- **Prometheus** for metrics collection
+- **Grafana** for visualization
+- **Loki** for log aggregation
+- **Fluent Bit** for log forwarding
+- **Alertmanager** for sending alerts to Slack
+- **Node Exporter** for collecting node-level metrics
 
 ---
 
-## 🏗️ Project Structure
 
+
+
+
+
+---
+
+## 📁 Project Structure
+
+```text
 cloud-monitoring-logging-infra/
 ├── terraform/
 │   ├── main.tf
 │   ├── variables.tf
-│   ├── outputs.tf
+│   └── outputs.tf
 │
 ├── ansible/
 │   ├── playbook.yml
-│   ├── roles/
-│   │   ├── prometheus/
-│   │   ├── grafana/
-│   │   ├── loki/
-│   │   └── fluentbit/          
+│   └── roles/
+│       ├── prometheus/
+│       ├── grafana/
+│       ├── loki/
+│       ├── fluentbit/
+│       └── node_exporter/
 │
 ├── README.md
-├── .gitignore
-
-
+└── .gitignore
+```
 
 ---
 
