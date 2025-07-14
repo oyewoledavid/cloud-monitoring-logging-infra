@@ -1,0 +1,112 @@
+- name: Create Prometheus user
+  user:
+    name: prometheus
+
+- name: Set Prometheus version
+  set_fact:
+    prometheus_version: "2.52.0"
+
+- name: Download Prometheus
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: /tmp/prometheus.tar.gz
+
+- name: Extract Prometheus
+  unarchive:
+    src: /tmp/prometheus.tar.gz
+    dest: /opt
+    remote_src: yes
+    owner: prometheus
+    group: prometheus
+
+- name: Move binaries
+  become: yes
+  shell: mv /opt/prometheus-2.52.0.linux-amd64/prometheus /usr/local/bin/ && mv /opt/prometheus-2.52.0.linux-amd64/promtool /usr/local/bin/
+
+- name: Create /var/lib/prometheus directory
+  become: yes
+  file:
+    path: /var/lib/prometheus
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+
+- name: Create Prometheus config directory
+  become: yes
+  file:
+    path: /etc/prometheus
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+
+- name: Create systemd service
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus
+      After=network.target
+  notify: Restart Prometheus
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+  loop:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Create Prometheus config
+  copy:
+    dest: /etc/prometheus/prometheus.yml
+    content: |
+      global:
+        scrape_interval: 15s
+      
+      rule_files:
+        - /etc/prometheus/alert.rules.yml
+      alerting:
+        alertmanagers:
+          - static_configs:
+              - targets: ['localhost:9093']
+
+      scrape_configs:
+        - job_name: 'node'
+          static_configs:
+            - targets: ['localhost:9100']
+  notify: Restart Prometheus
+
+- name: Create systemd service
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus
+      After=network.target
+
+      [Service]
+      User=prometheus
+      ExecStart=/usr/local/bin/prometheus \
+        --config.file=/etc/prometheus/prometheus.yml \
+        --storage.tsdb.path=/var/lib/prometheus/
+
+      [Install]
+      WantedBy=default.target
+
+- name: Start Prometheus
+  systemd:
+    name: prometheus
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Upload Prometheus alert rules
+  copy:
+    src: alert_rules.yml
+    dest: /etc/prometheus/alert.rules.yml
+  notify: Restart Prometheus
+
+# Handler moved to handlers/main.yml

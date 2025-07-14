@@ -1,0 +1,64 @@
+---
+- name: Install prerequisites
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+    update_cache: yes
+
+- name: Add Fluent Bit GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/fluentbit-keyring.gpg
+
+
+- name: Add Fluent Bit APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/ubuntu/{{ ansible_distribution_release }}/ {{ ansible_distribution_release }} main"
+    filename: fluentbit
+    state: present
+
+- name: Update apt cache after adding Fluent Bit repo
+  apt:
+    update_cache: yes
+
+- name: Install Fluent Bit package
+  apt:
+    name: fluent-bit
+    state: present
+
+- name: Deploy Fluent Bit config for Loki
+  copy:
+    dest: /etc/fluent-bit/fluent-bit.conf
+    content: |
+      [SERVICE]
+          Flush        1
+          Daemon       Off
+          Log_Level    info
+
+      [INPUT]
+          Name        tail
+          Path        /var/log/syslog
+          Tag         syslog
+          DB          /var/log/fluent-bit.db
+
+      [OUTPUT]
+          Name            loki
+          Match           *
+          Uri             /loki/api/v1/push
+          Host            localhost
+          Port            3100
+          Labels          job=fluentbit,host=${HOSTNAME}
+          Log_Level       info
+  notify: Restart Fluent Bit
+
+- name: Ensure Fluent Bit is enabled and running
+  service:
+    name: fluent-bit
+    state: started
+    enabled: true

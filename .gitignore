@@ -1,0 +1,38 @@
+
+---
+
+### ✅ `.gitignore`
+
+```gitignore
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+*.tfvars
+
+# Ansible
+*.retry
+*.log
+inventory.ini  # (optional: only ignore if you store secrets in it)
+
+# System
+*.swp
+*.bak
+*.tmp
+*.DS_Store
+
+# SSH keys or sensitive files
+*.pem
+*.key
+*.crt
+id_rsa*
+id_ed25519*
+
+# Python (if any helper scripts)
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+logs/

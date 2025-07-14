@@ -1,0 +1,59 @@
+- name: Download Alertmanager
+  get_url:
+    url: https://github.com/prometheus/alertmanager/releases/download/v0.27.0/alertmanager-0.27.0.linux-amd64.tar.gz
+    dest: /tmp/alertmanager.tar.gz
+
+- name: Extract Alertmanager
+  unarchive:
+    src: /tmp/alertmanager.tar.gz
+    dest: /opt/
+    remote_src: yes
+
+- name: Move Alertmanager binaries
+  become: true
+  shell: |
+    mv /opt/alertmanager-0.27.0.linux-amd64/alertmanager /usr/local/bin/
+    mv /opt/alertmanager-0.27.0.linux-amd64/amtool /usr/local/bin/
+
+- name: Create Alertmanager config
+  copy:
+    dest: /etc/alertmanager.yml
+    content: |
+      global:
+        resolve_timeout: 5m
+
+      route:
+        group_by: ['alertname']
+        group_wait: 10s
+        group_interval: 30s
+        repeat_interval: 1h
+        receiver: slack-notifications
+
+      receivers:
+        - name: slack-notifications
+          slack_configs:
+            - send_resolved: true
+              username: 'PrometheusBot'
+              channel: '#alerts'
+              api_url: 'https://hooks.slack.com/services/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'
+  notify: Restart Alertmanager
+
+- name: Create systemd service
+  copy:
+    dest: /etc/systemd/system/alertmanager.service
+    content: |
+      [Unit]
+      Description=Alertmanager
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/alertmanager --config.file=/etc/alertmanager.yml
+
+      [Install]
+      WantedBy=default.target
+
+- name: Start Alertmanager
+  systemd:
+    name: alertmanager
+    enabled: yes
+    state: started

@@ -1,0 +1,116 @@
+- name: Download Loki
+  get_url:
+    url: https://github.com/grafana/loki/releases/download/v2.9.4/loki-linux-amd64.zip
+    dest: /tmp/loki.zip
+
+- name: Install unzip
+  apt:
+    name: unzip
+    state: present
+    update_cache: yes
+
+- name: Unzip Loki
+  unarchive:
+    src: /tmp/loki.zip
+    dest: /usr/local/bin/
+    remote_src: yes
+
+- name: Make Loki executable
+  file:
+    path: /usr/local/bin/loki-linux-amd64
+    mode: '0755'
+    state: file
+
+- name: Move binary
+  command: mv /usr/local/bin/loki-linux-amd64 /usr/local/bin/loki
+
+- name: Create Loki config
+  copy:
+    dest: /etc/loki-config.yml
+    content: |
+      auth_enabled: false
+
+      server:
+        http_listen_address: 0.0.0.0
+        http_listen_port: 3100
+
+      ingester:
+        wal:
+          enabled: true
+        lifecycler:
+          ring:
+            kvstore:
+              store: inmemory
+            replication_factor: 1
+
+      schema_config:
+        configs:
+          - from: 2022-01-01
+            store: boltdb-shipper
+            object_store: filesystem
+            schema: v11
+            index:
+              prefix: index_
+              period: 24h
+
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: /tmp/loki/index
+          cache_location: /tmp/loki/boltdb-cache
+          shared_store: filesystem
+        filesystem:
+          directory: /tmp/loki/chunks
+
+      compactor:
+        working_directory: /tmp/loki/compactor
+
+
+      limits_config:
+        enforce_metric_name: false
+
+      chunk_store_config:
+        max_look_back_period: 0s
+
+      table_manager:
+        retention_deletes_enabled: false
+        retention_period: 0s
+  notify: Restart Loki
+
+
+
+- name: Create systemd service for Loki
+  copy:
+    dest: /etc/systemd/system/loki.service
+    content: |
+      [Unit]
+      Description=Loki Log Aggregator
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/loki -config.file=/etc/loki-config.yml
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create required directories for Loki
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - /tmp/loki
+    - /tmp/loki/index
+    - /tmp/loki/chunks
+    - /tmp/loki/boltdb-cache
+    - /tmp/loki/compactor
+
+
+- name: Start Loki
+  systemd:
+    name: loki
+    enabled: yes
+    state: started
+
+

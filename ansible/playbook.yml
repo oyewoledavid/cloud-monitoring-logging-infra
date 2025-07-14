@@ -1,0 +1,19 @@
+---
+- name: Setup Monitoring Server
+  hosts: monitoring
+  become: true
+  become_method: sudo
+  become_user: root
+  gather_facts: true
+  
+
+  vars:
+    loki_url: "http://localhost:3100/loki/api/v1/push"
+    
+  roles:
+    - node_exporter
+    - prometheus
+    - grafana
+    - alertmanager
+    - loki
+    - fluentbit

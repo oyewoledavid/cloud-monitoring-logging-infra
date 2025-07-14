@@ -1,0 +1,5 @@
+---
+- name: Restart Fluent Bit
+  service:
+    name: fluent-bit
+    state: restarted
