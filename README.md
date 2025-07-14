@@ -44,11 +44,7 @@ cloud-monitoring-logging-infra/
 │   │   ├── prometheus/
 │   │   ├── grafana/
 │   │   ├── loki/
-│   │   └── fluentbit/
-│   │   
-│   │       
-│   │       
-│   │           
+│   │   └── fluentbit/          
 │
 ├── README.md
 ├── .gitignore
