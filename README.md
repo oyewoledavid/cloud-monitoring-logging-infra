@@ -31,6 +31,7 @@ This infrastructure enables:
 ---
 
 ## 🏗️ Project Structure
+
 cloud-monitoring-logging-infra/
 ├── terraform/
 │   ├── main.tf
@@ -40,12 +41,18 @@ cloud-monitoring-logging-infra/
 ├── ansible/
 │   ├── playbook.yml
 │   ├── roles/
-│       ├── prometheus/
-│       ├── grafana/
-│       ├── loki/
-│       └── td_agent_bit/
+│   │   ├── prometheus/
+│   │   ├── grafana/
+│   │   ├── loki/
+│   │   └── fluentbit/
+│   │   
+│   │       
+│   │       
+│   │           
 │
 ├── README.md
+├── .gitignore
+
 
 
 ---
