@@ -1,0 +1,29 @@
+---
+- name: Install Git
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Clone website repo
+  git:
+    repo: https://github.com/oyewoledavid/Zuri-Landiing-Page
+    dest: /var/www/zuri-landing
+    force: yes
+
+- name: Deploy static site with Nginx
+  copy:
+    src: /var/www/zuri-landing/
+    dest: /var/www/html/
+    remote_src: yes
+
+- name: Restart Nginx
+  service:
+    name: nginx
+    state: restarted

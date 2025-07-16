@@ -31,7 +31,7 @@
     name: fluent-bit
     state: present
 
-- name: Deploy Fluent Bit config for Loki
+- name: Deploy Fluent Bit config for Loki (via monitoring server IP)
   copy:
     dest: /etc/fluent-bit/fluent-bit.conf
     content: |
@@ -50,7 +50,7 @@
           Name            loki
           Match           *
           Uri             /loki/api/v1/push
-          Host            localhost
+          Host            {{ monitoring_private_ip }}
           Port            3100
           Labels          job=fluentbit,host=${HOSTNAME}
           Log_Level       info

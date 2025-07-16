@@ -1,0 +1,47 @@
+server {
+    listen 80;
+    server_name monitoring.blessedc.org;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+}
+
+server {
+    listen 443 ssl;
+    server_name monitoring.blessedc.org;
+
+    ssl_certificate /etc/letsencrypt/live/monitoring.blessedc.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/monitoring.blessedc.org/privkey.pem;
+
+    location /grafana/ {
+        proxy_pass http://localhost:3000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /prometheus/ {
+        proxy_pass http://localhost:9090/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /alertmanager/ {
+        proxy_pass http://localhost:9093/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /loki/ {
+        proxy_pass http://localhost:3100/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /web/ {
+        proxy_pass http://{{ web_server_private_ip }}/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}

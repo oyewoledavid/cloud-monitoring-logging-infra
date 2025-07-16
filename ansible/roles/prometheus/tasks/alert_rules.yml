@@ -1,5 +1,5 @@
 groups:
-  - name: instance_down
+  - name: instance_health
     rules:
       - alert: InstanceDown
         expr: up == 0
@@ -9,3 +9,57 @@ groups:
         annotations:
           summary: "Instance {{ $labels.instance }} is down"
           description: "{{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: HighCPUUsage
+        expr: (100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU Usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for more than 2 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Memory Usage on {{ $labels.instance }}"
+          description: "Memory usage is above 80% for more than 2 minutes."
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} * 100 > 85
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low Disk Space on {{ $labels.instance }}"
+          description: "Disk space usage is above 85% on root partition."
+
+      - alert: FluentBitNotPushingLogs
+        expr: rate(fluentbit_output_proc_records_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fluent Bit not pushing logs on {{ $labels.instance }}"
+          description: "Fluent Bit output records are zero for more than 5 minutes — check log forwarding."
+
+      - alert: NodeExporterDown
+        expr: absent(node_cpu_seconds_total)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node Exporter is down on {{ $labels.instance }}"
+          description: "Prometheus cannot scrape node metrics from this instance."
+
+      - alert: HighLoadAverage
+        expr: node_load1 > count by(instance) (node_cpu_seconds_total{mode="system"})
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Load Average on {{ $labels.instance }}"
+          description: "1-minute load average is higher than the number of CPU cores."
