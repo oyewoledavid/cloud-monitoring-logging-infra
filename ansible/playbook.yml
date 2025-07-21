@@ -5,8 +5,10 @@
   become_method: sudo
   become_user: root
   gather_facts: true
-  
 
+  vars_files:
+    - terraform_outputs.yml
+  
   vars:
     loki_url: "http://localhost:3100/loki/api/v1/push"
     
@@ -21,18 +23,16 @@
 - name: Configure web server
   hosts: web
   become: true
+
   roles:
     - { role: webserver, tags: ['webserver'] }
     - { role: node_exporter, tags: ['web_node_exporter'] }
-    - { role: fluentbit_web, tags: ['fluentbit_web']}
+    - { role: fluentbit_web, tags: ['fluentbit_web'] }
 
 - name: Configure Nginx Reverse Proxy
   hosts: monitoring
   become: true
-  vars:
-    domain_name: monitoring.blessedc.org
-    email_address: oyewolefemi69@gmail.com
-    web_server_private_ip: "{{ hostvars[groups['monitoring'][0]].web_server_private_ip }}"
+
   roles:
     - { role: reverse_nginx, tags: ['reverse_nginx'] }
 

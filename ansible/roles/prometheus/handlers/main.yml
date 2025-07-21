@@ -1,12 +1,10 @@
 ---
+- name: Reload systemd
+  command: systemctl daemon-reexec
+
 - name: Restart Prometheus
-  become: true
   systemd:
     name: prometheus
     state: restarted
-    daemon_reload: yes
-
-- name: Reload systemd
-  become: true
-  systemd:
+    enabled: yes
     daemon_reload: yes

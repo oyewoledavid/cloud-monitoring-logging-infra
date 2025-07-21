@@ -1,12 +1,11 @@
 ---
 - name: Restart Loki
-  become: true
   systemd:
     name: loki
     state: restarted
-    daemon_reload: yes
+    enabled: true
+    daemon_reload: true
 
-- name: Reload systemd
-  become: true
-  systemd:
-    daemon_reload: yes
+- name: Reload Systemd
+  command: systemctl daemon-reexec
+

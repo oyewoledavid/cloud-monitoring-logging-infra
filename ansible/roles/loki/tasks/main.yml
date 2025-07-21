@@ -21,12 +21,20 @@
     mode: '0755'
     state: file
 
-- name: Move binary
+- name: Rename Loki binary
   command: mv /usr/local/bin/loki-linux-amd64 /usr/local/bin/loki
+  args:
+    creates: /usr/local/bin/loki
 
-- name: Create Loki config
+- name: Create Loki config directory
+  file:
+    path: /etc/loki
+    state: directory
+    mode: '0755'
+
+- name: Deploy Loki config
   copy:
-    dest: /etc/loki-config.yml
+    dest: /etc/loki/loki-config.yaml
     content: |
       auth_enabled: false
 
@@ -47,23 +55,27 @@
         configs:
           - from: 2022-01-01
             store: boltdb-shipper
-            object_store: filesystem
+            object_store: s3
             schema: v11
             index:
               prefix: index_
               period: 24h
 
       storage_config:
+        aws:
+          s3: ${LOKI_BUCKET_NAME}
+          region: ${LOKI_BUCKET_REGION}
+
         boltdb_shipper:
           active_index_directory: /tmp/loki/index
           cache_location: /tmp/loki/boltdb-cache
-          shared_store: filesystem
+          shared_store: s3
+
         filesystem:
           directory: /tmp/loki/chunks
 
       compactor:
         working_directory: /tmp/loki/compactor
-
 
       limits_config:
         enforce_metric_name: false
@@ -76,9 +88,7 @@
         retention_period: 0s
   notify: Restart Loki
 
-
-
-- name: Create systemd service for Loki
+- name: Create systemd unit for Loki (with AWS creds from environment)
   copy:
     dest: /etc/systemd/system/loki.service
     content: |
@@ -87,12 +97,21 @@
       After=network.target
 
       [Service]
-      ExecStart=/usr/local/bin/loki -config.file=/etc/loki-config.yml
+      Environment=LOKI_BUCKET_NAME=s3://loki-logs-for-monitoring
+      Environment=LOKI_BUCKET_REGION=us-east-1
+      Environment=AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') }}
+      Environment=AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}
+      ExecStart=/usr/local/bin/loki -config.file=/etc/loki/loki-config.yaml
+      Restart=on-failure
+      RestartSec=5s
 
       [Install]
       WantedBy=multi-user.target
+  notify:
+    - Reload Systemd
+    - Restart Loki
 
-- name: Create required directories for Loki
+- name: Create Loki storage directories
   file:
     path: "{{ item }}"
     state: directory
@@ -106,11 +125,8 @@
     - /tmp/loki/boltdb-cache
     - /tmp/loki/compactor
 
-
-- name: Start Loki
+- name: Start and enable Loki
   systemd:
     name: loki
     enabled: yes
     state: started
-
-

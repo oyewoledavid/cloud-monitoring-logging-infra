@@ -104,6 +104,12 @@ resource "aws_security_group" "main" {
 
 }
 
+resource "aws_s3_bucket" "loki_logs" {
+  bucket = "loki-logs-for-monitoring"
+  force_destroy = true
+}
+
+
 data "template_file" "inventory" {
   template = file("inventory.tpl")
   vars = {

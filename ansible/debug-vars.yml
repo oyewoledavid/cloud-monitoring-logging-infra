@@ -1,0 +1,29 @@
+---
+- name: Debug all Ansible variables
+  hosts: all
+  gather_facts: false
+
+  vars_files:
+    - terraform_outputs.yml
+
+  tasks:
+    - name: Display domain_name
+      debug:
+        var: domain_name
+
+    - name: Display web_server_private_ip
+      debug:
+        var: web_server_private_ip
+
+    - name: Display loki_bucket_name
+      debug:
+        var: loki_bucket_name
+
+    - name: Display loki_bucket_region
+      debug:
+        var: loki_bucket_region
+
+    - name: Display all variables (optional, noisy)
+      debug:
+        var: hostvars[inventory_hostname]
+      tags: verbose

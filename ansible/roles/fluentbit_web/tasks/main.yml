@@ -31,27 +31,39 @@
     name: fluent-bit
     state: present
 
-- name: Deploy Fluent Bit config for Loki (via monitoring server IP)
+- name: Ensure Fluent Bit config directory exists
+  file:
+    path: /etc/fluent-bit
+    state: directory
+    mode: '0755'
+
+- name: Deploy Fluent Bit config for Loki (via monitoring server domain)
   copy:
     dest: /etc/fluent-bit/fluent-bit.conf
     content: |
       [SERVICE]
-          Flush        1
+          Flush        5
           Daemon       Off
           Log_Level    info
+          Parsers_File  parsers.conf
 
       [INPUT]
           Name        tail
           Path        /var/log/syslog
           Tag         syslog
+          refresh_interval 5
+          Mem_Buf_Limit 5MB
+          skip_long_lines On
           DB          /var/log/fluent-bit.db
 
       [OUTPUT]
           Name            loki
           Match           *
-          Uri             /loki/api/v1/push
-          Host            {{ monitoring_private_ip }}
-          Port            3100
+          Host            {{ domain_name }}
+          Port            443
+          TLS             On
+          TLS.Verify      Off
+          Uri             /loki/loki/api/v1/push
           Labels          job=fluentbit,host=${HOSTNAME}
           Log_Level       info
   notify: Restart Fluent Bit
@@ -61,3 +73,6 @@
     name: fluent-bit
     state: started
     enabled: true
+
+- name: Flush handlers
+  meta: flush_handlers

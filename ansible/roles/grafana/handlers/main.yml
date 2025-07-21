@@ -1,0 +1,9 @@
+# Handlers
+- name: Reload Systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Restart Grafana
+  systemd:
+    name: grafana-server
+    state: restarted

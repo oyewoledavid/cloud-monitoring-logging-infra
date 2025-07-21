@@ -1,5 +1,7 @@
 ---
+# roles/fluentbit_web/handlers/main.yml
 - name: Restart Fluent Bit
-  service:
+  systemd:
     name: fluent-bit
     state: restarted
+    enabled: yes

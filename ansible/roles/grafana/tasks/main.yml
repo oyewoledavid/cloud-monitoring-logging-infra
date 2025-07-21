@@ -3,7 +3,7 @@
     url: https://packages.grafana.com/gpg.key
     state: present
 
-- name: Add Grafana APT repo
+- name: Add Grafana APT repository
   apt_repository:
     repo: deb https://packages.grafana.com/oss/deb stable main
     state: present
@@ -11,10 +11,45 @@
 - name: Install Grafana
   apt:
     name: grafana
-    update_cache: yes
     state: present
+    update_cache: yes
 
-- name: Start and enable Grafana
+- name: Ensure Grafana config directory exists
+  file:
+    path: /etc/grafana
+    state: directory
+    mode: '0755'
+
+- name: Ensure Grafana is configured to serve from root
+  blockinfile:
+    path: /etc/grafana/grafana.ini
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - GRAFANA SERVER CONFIG"
+    block: |
+      [server]
+      root_url = https://{{ domain_name }}
+      serve_from_sub_path = false
+    insertafter: EOF
+    create: yes
+  notify: Restart Grafana
+
+- name: Ensure Grafana systemd override directory exists
+  file:
+    path: /etc/systemd/system/grafana-server.service.d
+    state: directory
+    mode: '0755'
+
+- name: Add systemd override for Grafana root path
+  copy:
+    dest: /etc/systemd/system/grafana-server.service.d/override.conf
+    content: |
+      [Service]
+      Environment="GF_SERVER_ROOT_URL=https://{{ domain_name }}"
+      Environment="GF_SERVER_SERVE_FROM_SUB_PATH=false"
+  notify:
+    - Reload Systemd
+    - Restart Grafana
+
+- name: Start and enable Grafana service
   systemd:
     name: grafana-server
     enabled: yes

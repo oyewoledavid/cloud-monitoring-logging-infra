@@ -10,8 +10,8 @@
     rule: allow
     port: "{{ item }}"
   loop:
-    - '80'
-    - '443'
+    - "80"
+    - "443"
 
 - name: Install Certbot and Nginx plugin
   apt:
@@ -22,15 +22,33 @@
 
 - name: Deploy Nginx configuration
   template:
-    src: nginx.conf.j2
-    dest: /etc/nginx/sites-available/default
+    src:  nginx.conf.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }} 
   notify: Reload Nginx
+
+- name: Enable Nginx site
+  file:
+    src: /etc/nginx/sites-available/{{ domain_name }}
+    dest: /etc/nginx/sites-enabled/{{ domain_name }}
+    state: link
+    force: yes
+
+- name: Disable default Nginx site if exists
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
 
 - name: Obtain SSL certificate with Certbot
   shell: |
     certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ email_address }}
   args:
     creates: /etc/letsencrypt/live/{{ domain_name }}
+
+- name: Start and enable Nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
 
 - name: Enable and start Nginx
   service:
