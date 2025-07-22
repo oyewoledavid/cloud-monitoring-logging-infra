@@ -30,12 +30,13 @@
         receiver: slack-notifications
 
       receivers:
-        - name: slack-notifications
+        - name: 'slack-notifications'
           slack_configs:
             - send_resolved: true
               username: 'PrometheusBot'
               channel: '#alerts'
-              api_url: 'https://hooks.slack.com/services/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'
+              api_url: '{{ slack_webhook_url }}'
+
   notify: Restart Alertmanager
 
 - name: Create systemd service

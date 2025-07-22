@@ -48,7 +48,7 @@ groups:
 
       - alert: NodeExporterDown
         expr: absent(node_cpu_seconds_total)
-        for: 2m
+        for: 30s
         labels:
           severity: critical
         annotations:
@@ -63,3 +63,4 @@ groups:
         annotations:
           summary: "High Load Average on {{ $labels.instance }}"
           description: "1-minute load average is higher than the number of CPU cores."
+
