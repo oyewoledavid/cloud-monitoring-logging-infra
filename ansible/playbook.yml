@@ -5,10 +5,9 @@
   become_method: sudo
   become_user: root
   gather_facts: true
-
-  vars_files:
-    - terraform_outputs.yml
   
+  vars_files:
+  - terraform_outputs.yml
   vars:
     loki_url: "http://localhost:3100/loki/api/v1/push"
     
@@ -24,6 +23,9 @@
   hosts: web
   become: true
 
+  vars_files:
+  - terraform_outputs.yml
+
   roles:
     - { role: webserver, tags: ['webserver'] }
     - { role: node_exporter, tags: ['web_node_exporter'] }
@@ -32,6 +34,9 @@
 - name: Configure Nginx Reverse Proxy
   hosts: monitoring
   become: true
+
+  vars_files:
+  - terraform_outputs.yml
 
   roles:
     - { role: reverse_nginx, tags: ['reverse_nginx'] }

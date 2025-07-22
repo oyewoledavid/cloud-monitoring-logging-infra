@@ -63,8 +63,8 @@
 
       storage_config:
         aws:
-          s3: ${LOKI_BUCKET_NAME}
-          region: ${LOKI_BUCKET_REGION}
+          s3: s3://{{ loki_bucket_name }}
+          region: {{ loki_bucket_region }}
 
         boltdb_shipper:
           active_index_directory: /tmp/loki/index
@@ -90,18 +90,17 @@
 
 - name: Create systemd unit for Loki (with AWS creds from environment)
   copy:
-    dest: /etc/systemd/system/loki.service
+    dest: /etc/systemd/system/loki.service.d/override.conf
     content: |
       [Unit]
       Description=Loki Log Aggregator
       After=network.target
 
       [Service]
-      Environment=LOKI_BUCKET_NAME=s3://loki-logs-for-monitoring
-      Environment=LOKI_BUCKET_REGION=us-east-1
       Environment=AWS_ACCESS_KEY_ID={{ lookup('env', 'AWS_ACCESS_KEY_ID') }}
       Environment=AWS_SECRET_ACCESS_KEY={{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}
-      ExecStart=/usr/local/bin/loki -config.file=/etc/loki/loki-config.yaml
+      ExecStart=
+      ExecStart=/usr/local/bin/loki -config.file=/etc/loki/loki-config.yaml -config.expand-env=true
       Restart=on-failure
       RestartSec=5s
 

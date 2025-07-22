@@ -11,15 +11,14 @@
 terraform.tfvars
 *.tfvars
 ansible/terraform_outputs.yml
-terraform/terraform_outputs.json
+terraform_outputs.json
 
 # Ansible
 *.retry
 *.log
 inventory.ini  # (optional: only ignore if you store secrets in it)
-ansible/secrets/aws_credentials.env
-ansible/secrets/terraform_outputs.yml
 
+ansible/inventory.ini
 
 
 # System

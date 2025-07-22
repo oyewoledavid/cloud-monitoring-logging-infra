@@ -55,7 +55,7 @@
             - targets: ['localhost:9100']
         - job_name: 'node_exporter_web'
           static_configs:
-            - targets: ['{{ web_server_private_ip }}:9100']
+            - targets: ['{{ web_server_private_ip }}:9100'] 
   notify: Restart Prometheus
 
 - name: Upload Prometheus alert rules
