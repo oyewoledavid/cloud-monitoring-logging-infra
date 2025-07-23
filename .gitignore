@@ -11,7 +11,7 @@
 terraform.tfvars
 *.tfvars
 ansible/terraform_outputs.yml
-terraform_outputs.json
+terraform/terraform_outputs.json
 
 # Ansible
 *.retry
