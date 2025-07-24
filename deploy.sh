@@ -9,7 +9,7 @@ SUBDOMAIN="monitoring"                   # The A record to update
 DDNS_PASSWORD="91630bf13693438fb54cf1e9a1d20709" # Replace this with your DDNS password from Namecheap
 
 TERRAFORM_DIR="./terraform"
-ANSIBLE_DIR="./ansible"
+ANSIBLE_DIR="../ansible"
 
 echo "🚀 Starting Infrastructure Deployment..."
 

@@ -4,7 +4,7 @@ import json, yaml, subprocess, os
 # Run `terraform output -json`
 tf_output = subprocess.run(
     ["terraform", "output", "-json"],
-    cwd="../../terraform",  # Adjust path to your Terraform folder
+    cwd="../terraform",  # Adjust path to your Terraform folder
     capture_output=True,
     check=True
 )
@@ -16,10 +16,10 @@ raw_outputs = json.loads(tf_output.stdout)
 flattened_outputs = {key: val["value"] for key, val in raw_outputs.items()}
 
 # Write to YAML
-dest_path = "../terraform_outputs.yml"
-os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+#  dest_path = "terraform_outputs.yml"
+# os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
-with open(dest_path, "w") as f:
+with open("terraform_outputs.yml", "w") as f:
     yaml.dump(flattened_outputs, f)
 
 print("✅ Flattened Terraform outputs written to terraform_outputs.yml")

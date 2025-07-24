@@ -1,0 +1,15 @@
+server {
+    listen 80;
+    server_name {{ domain_name }};
+
+    # Allow Certbot to verify domain ownership
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # Temporary root (optional but safe)
+    location / {
+        return 200 "Waiting for SSL to be configured.\n";
+        add_header Content-Type text/plain;
+    }
+}

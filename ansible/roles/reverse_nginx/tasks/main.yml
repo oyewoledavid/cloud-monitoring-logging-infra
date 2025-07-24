@@ -20,13 +20,14 @@
       - python3-certbot-nginx
     state: present
 
-- name: Deploy Nginx configuration
+# 🟡 TEMPORARY HTTP CONFIG
+- name: Deploy temporary HTTP-only Nginx config (for Certbot)
   template:
-    src:  nginx.conf.j2
-    dest: /etc/nginx/sites-available/{{ domain_name }} 
+    src: nginx_http_only.conf.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
   notify: Reload Nginx
 
-- name: Enable Nginx site
+- name: Enable temporary site config
   file:
     src: /etc/nginx/sites-available/{{ domain_name }}
     dest: /etc/nginx/sites-enabled/{{ domain_name }}
@@ -38,20 +39,35 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
 
+- name: Ensure Nginx is started before Certbot
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+
+# ✅ CERTBOT SSL
 - name: Obtain SSL certificate with Certbot
   shell: |
     certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ email_address }}
   args:
     creates: /etc/letsencrypt/live/{{ domain_name }}
 
-- name: Start and enable Nginx
+# 🔁 FINAL FULL HTTPS CONFIG
+- name: Deploy final Nginx config with HTTPS reverse proxy
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
+  notify: Reload Nginx
+
+- name: Re-enable final config (same path, just updated)
+  file:
+    src: /etc/nginx/sites-available/{{ domain_name }}
+    dest: /etc/nginx/sites-enabled/{{ domain_name }}
+    state: link
+    force: yes
+
+- name: Ensure Nginx is running with updated config
   systemd:
     name: nginx
-    state: started
-    enabled: yes
-
-- name: Enable and start Nginx
-  service:
-    name: nginx
-    state: started
+    state: restarted
     enabled: yes

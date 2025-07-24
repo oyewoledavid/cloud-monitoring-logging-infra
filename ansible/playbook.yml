@@ -13,6 +13,7 @@
     domain_name: monitoring.blessedc.org
     aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
     aws_secret_key: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    slack_webhook_url: "https://hooks.slack.com/services/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"
 
   roles:
     - { role: node_exporter, tags: ['node_exporter'] }
